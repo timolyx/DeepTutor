@@ -75,10 +75,27 @@ services:
       # docs-for-dev/CONTAINERIZATION.md → "One-time migration".
       - ./data:/app/data
       - "${DEEPTUTOR_WORKSPACE_HOST:-./data/user/workspace}:/workspace"
+      # 上游缺陷补丁：模型名含 qwen3 时会把 enable_thinking 塞进请求体，
+      # 而 Groq 直接 400 拒绝该字段。只读覆盖该模块，等上游修复后删除本行。
+      - ./patches/reasoning_params.py:/app/deeptutor/services/llm/reasoning_params.py:ro
 
     environment:
       - DEEPTUTOR_WORKSPACE_ROOT=/workspace
       - DEEPTUTOR_WORKSPACE_ALLOWED_ROOTS=/workspace
+      # CodeBuddy/WorkBuddy 提供方需要 codebuddy-agent-sdk 才能完成 OAuth 登录；
+      # 声明为部署属性，容器重建后自动重装（pip 缓存落在 /app/data 上，几乎零成本）。
+      - DEEPTUTOR_EXTRAS=codebuddy
+      # 容器默认 HOME=/root，但应用以 uid 1000 运行，SDK 写登录态会 Permission denied。
+      # 指向数据卷内可写目录，重建后依然有效。
+      - HOME=/app/data/.home
+      # SDK 默认把登录页指到海外站 www.codebuddy.ai（本机 TLS 握手超时），
+      # 指到国内网关后登录地址变为 copilot.tencent.com/login，与 WorkBuddy 账号一致。
+      - CODEBUDDY_BASE_URL=https://copilot.tencent.com
+      # 代码执行（exec 工具）默认关闭：镜像内没有 bwrap，且此开关默认 False，
+      # 于是 chat 的导师无法运行 Python，学编程只剩“讲解”一条路。
+      # 开启后走 RestrictedSubprocessBackend（隔离级别 APPLICATION），
+      # 执行范围限定在本容器内的 /workspace 隔离目录，不影响宿主机。
+      - DEEPTUTOR_SANDBOX_ALLOW_SUBPROCESS=1
 
     # Optional dependencies, re-applied on every start (#762). This image
     # ships the base install; anything added with `docker exec … pip install`
