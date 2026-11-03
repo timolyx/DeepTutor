@@ -112,7 +112,7 @@ MAX_REASONING_ONLY_RECOVERIES = 2
 # user-visible output. Once output is visible, replay is unsafe because it can
 # duplicate prose or tool calls.
 _PROVIDER_RETRY_DELAYS = (0.5, 1.5)
-_STREAM_IDLE_TIMEOUT_SECONDS = 180.0
+_STREAM_IDLE_TIMEOUT_SECONDS = 90.0
 
 
 async def _bounded_stream_chunks(stream: Any):

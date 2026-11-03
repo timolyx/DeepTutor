@@ -85,6 +85,11 @@ services:
       # CodeBuddy/WorkBuddy 提供方需要 codebuddy-agent-sdk 才能完成 OAuth 登录；
       # 声明为部署属性，容器重建后自动重装（pip 缓存落在 /app/data 上，几乎零成本）。
       - DEEPTUTOR_EXTRAS=codebuddy
+      # 镜像源：官方 PyPI 在国内约 0.1 MB/s，70 MB 的 SDK 要十几分钟才能下完，
+      # 这段时间后端不监听端口，healthcheck 必然判 unhealthy。
+      # 容器内 pip 缓存又被判定不可写（bind mount 权限问题），无法复用，
+      # 于是每次重建都是全量重下。走清华源后同一版本（0.3.296）可跑满带宽。
+      - PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
       # 容器默认 HOME=/root，但应用以 uid 1000 运行，SDK 写登录态会 Permission denied。
       # 指向数据卷内可写目录，重建后依然有效。
       - HOME=/app/data/.home

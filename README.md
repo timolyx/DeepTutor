@@ -1,9 +1,3 @@
-着急时用docker compose -f docker-compose.ghcr.yml up -d --pull never
-不着急时用docker compose -f docker-compose.ghcr.yml up -d
-
-
-
-
 <div align="center">
 
 <p align="center"><img src="assets/figs/logo/color-full.png" alt="DeepTutor" width="480"></p>
